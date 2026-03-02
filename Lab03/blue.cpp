@@ -1,64 +1,59 @@
 #include <iostream>
+#include <limits>
+#include <vector>
 #include <climits>
-using namespace std;
+#include <algorithm>
+// This program implements the divide and conquer algorithm to find the maximum subarray sum in a given array of integers. The main function reads the input array and calls the solve function.
+// The program divides the array into halves until it reaches the base case of a single element. 
+// The bridge function is used to find the maximum sum that crosses the midpoint of the current segment. Finally, the program outputs the maximum subarray sum found.
 
-// find max sum crossing the midpoint
-int maxCrossingSum(int arr[], int left, int mid, int right) {
-    int sum = 0;
-    int leftMax = INT_MIN;
+using namespace std; 
+using num = long long; // to avoid overflow, we use long long instead of int
 
-    for (int i = mid; i >= left; i--) {
-        sum += arr[i];
-        if (sum > leftMax)
-            leftMax = sum;
+num bridge(const vector<num>& v, int a, int b, int c) // a, b, c where  a < b < c
+{
+    num L = LLONG_MIN; // we initialize L and M to the smallest possible value to handle cases where all numbers are negative
+    num actual = 0; 
+
+    for (int i = b; i > a; --i) // start from b and go down to a + 1 
+    {
+        actual += v[i]; // we add the current element to actual
+        if (actual > L) L = actual; // if actual is greater than L, we update L
+    }
+    num M = LLONG_MIN; 
+    actual = 0; 
+    for (int i = b + 1; i <= c; i++) // start from b + 1 and go up to c
+    {
+        actual += v[i]; 
+        if (actual > M) M = actual; // if actual is greater than M, we update M
     }
 
-    sum = 0;
-    int rightMax = INT_MIN;
-
-    for (int j = mid + 1; j <= right; j++) {
-        sum += arr[j];
-        if (sum > rightMax)
-            rightMax = sum;
-    }
-
-    return leftMax + rightMax;
+    return L + M; // the maximum sum of the left and right parts that cross the midpoint b
 }
 
-// divide & conquer max subarray
-int maxSubarray(int arr[], int left, int right) {
-    if (left == right)
-        return arr[left];
+num solve(const vector<num>& v, int a, int b)
+{
+    if (a == b) return v[a]; // base case: if there is only one element, return that element
 
-    int mid = (left + right) / 2;
+    int c = (a + b) / 2; // we find the midpoint of the current segment
+    num L = solve(v, a, c); // solve the left and right halves
+    num R = solve(v, c + 1, b); // solve the left and right halves 
+    num M = bridge(v, a, c, b); // finding the maximum sum that crosses the midpoint c
 
-    int leftSum = maxSubarray(arr, left, mid);
-    int rightSum = maxSubarray(arr, mid + 1, right);
-    int crossSum = maxCrossingSum(arr, left, mid, right);
-
-    if (leftSum >= rightSum && leftSum >= crossSum)
-        return leftSum;
-    else if (rightSum >= leftSum && rightSum >= crossSum)
-        return rightSum;
-    else
-        return crossSum;
+    return max({L, R, M}); 
 }
 
-int main() {
-    int n;
-    cin >> n;
+int main()
+{
+    int n; 
+    cin >> n; 
+    vector<num> v(n); // creating a vector of size n to store the input array
+    for (int i = 0; i < n; i++) cin >> v[i]; // read inputing array 
 
-    // dynamic allocation
-    int* arr = new int[n];
+    cout << solve(v, 0, n - 1) << endl; // call the solve function with the entire array and print the result
 
-    for (int i = 0; i < n; i++) {
-        cin >> arr[i];
-    }
-
-    int result = maxSubarray(arr, 0, n - 1);
-
-    cout << result;   // output only one number
-
-    delete[] arr;
     return 0;
 }
+
+
+
